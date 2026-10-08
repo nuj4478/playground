@@ -1,0 +1,9 @@
+{
+  "name": "boxoffice",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix api run dev",
+    "web": "npx serve web",
+    "zip": "npm --prefix api run zip"
+  }
+}

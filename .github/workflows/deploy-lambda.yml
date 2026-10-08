@@ -1,0 +1,62 @@
+# main 에 api/ 변경이 머지(push)되면 AWS Lambda 함수 boxoffice 에 자동 배포
+# 필요한 GitHub 설정 (Settings → Secrets and variables → Actions)
+#   Secrets   : AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY  (배포 전용 IAM 사용자 키)
+#   Variables : FUNCTION_URL  (선택. 있으면 배포 후 /ads 를 호출해 확인)
+name: Deploy Lambda (boxoffice)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'api/**'
+      - '!api/local-server.mjs' # 로컬 테스트용 서버만 바뀐 건 배포 안 함
+      - '.github/workflows/deploy-lambda.yml'
+  workflow_dispatch: # Actions 탭에서 수동 실행
+
+concurrency:
+  group: deploy-lambda # 배포가 겹치지 않게 한 번에 하나씩
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-southeast-2
+      FUNCTION_NAME: boxoffice
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 문법 검사
+        run: |
+          node --check api/index.mjs
+          node --check api/movies/handler.mjs
+          node --check api/ads/handler.mjs
+
+      - name: zip 만들기 (npm run zip 과 같은 내용)
+        run: cd api && zip -r function.zip index.mjs movies/handler.mjs ads/handler.mjs
+
+      - name: AWS 로그인
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Lambda 코드 업데이트
+        run: |
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --zip-file fileb://api/function.zip \
+            --query '{함수:FunctionName, 수정시각:LastModified}' --output table
+          aws lambda wait function-updated --function-name "$FUNCTION_NAME"
+
+      - name: 배포 확인 (FUNCTION_URL 변수가 있을 때만)
+        if: ${{ vars.FUNCTION_URL != '' }}
+        run: curl -fsS "${{ vars.FUNCTION_URL }}/ads" | head -c 300

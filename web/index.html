@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>오늘의 박스오피스</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main>
+    <div class="topbar">
+      <button type="button" id="adminToggle" class="toggle" aria-pressed="false">운영자 모드</button>
+    </div>
+
+    <header>
+      <h1>박스오피스</h1>
+      <label class="date">
+        <span>날짜</span>
+        <input type="date" id="date" />
+      </label>
+    </header>
+
+    <!-- 운영자 모드 패널: 토글을 켜야 보인다 -->
+    <section id="admin" class="admin" hidden>
+      <form id="login" class="login">
+        <label>
+          <span>관리자 토큰</span>
+          <input type="password" id="token" autocomplete="current-password" required />
+        </label>
+        <button type="submit">확인</button>
+      </form>
+
+      <div id="editor" hidden>
+        <div class="editor-head">
+          <h2>광고 관리</h2>
+          <button type="button" id="addAd">+ 광고 추가</button>
+        </div>
+        <p id="published" class="published"></p>
+
+        <ol id="editList" class="edit-list"></ol>
+        <div class="editor-foot">
+          <p id="adminStatus" class="status" role="status"></p>
+          <button type="button" id="saveAds" class="primary">저장</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 광고 배너 (노출 중인 것만, 저장된 순서대로) -->
+    <ul id="ads" class="ads"></ul>
+
+    <p id="status" class="status" role="status"></p>
+    <ol id="list" class="list"></ol>
+
+    <footer>데이터: 영화진흥위원회 KOBIS 오픈API</footer>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+  <script src="ads.js"></script>
+</body>
+</html>
