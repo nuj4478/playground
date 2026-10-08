@@ -54,7 +54,7 @@ jobs:
           aws lambda update-function-code \
             --function-name "$FUNCTION_NAME" \
             --zip-file fileb://api/function.zip \
-            --query '{함수:FunctionName, 수정시각:LastModified}' --output table
+            --query '{Function:FunctionName, LastModified:LastModified}' --output table
           aws lambda wait function-updated --function-name "$FUNCTION_NAME"
 
       - name: 배포 확인 (FUNCTION_URL 변수가 있을 때만)
