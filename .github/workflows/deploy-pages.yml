@@ -1,0 +1,40 @@
+# main 에 web/ 변경이 머지(push)되면 GitHub Pages(https://nuj4478.github.io/playground/)에 자동 배포
+# 처음 한 번: 저장소 Settings → Pages → Source 를 "GitHub Actions" 로 선택
+name: Deploy Pages (web)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch: # Actions 탭에서 수동 실행
+
+concurrency:
+  group: deploy-pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write    # Pages 에 올리기
+  id-token: write # Pages 배포 인증
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/configure-pages@v5
+
+      - name: web 폴더를 Pages 용으로 묶기
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - name: Pages 에 배포
+        id: deployment
+        uses: actions/deploy-pages@v4
